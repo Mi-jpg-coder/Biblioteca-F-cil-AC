@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Biblioteca Fácil</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header class="cabecalho">
+
+        <div class="marca">
+            <div class="icone-livro">📚</div>
+
+            <div>
+                <h1>Biblioteca Fácil</h1>
+                <p>Organize seus livros de forma simples</p>
+            </div>
+        </div>
+
+        <div class="contador">
+            <span>📖</span>
+            <div>
+                <small>Livros cadastrados</small>
+                <strong id="totalLivros">0</strong>
+            </div>
+        </div>
+
+    </header>
+
+
+    <main>
+
+        <section class="apresentacao">
+
+            <div>
+                <span class="etiqueta">📚 MINHA BIBLIOTECA</span>
+
+                <h2>
+                    Seus livros,
+                    <span>organizados.</span>
+                </h2>
+
+                <p>
+                    Cadastre seus livros e mantenha sua biblioteca
+                    organizada em um só lugar.
+                </p>
+            </div>
+
+            <div class="ilustracao">
+                📚
+            </div>
+
+        </section>
+
+
+        <section class="cadastro">
+
+            <div class="titulo-secao">
+
+                <div class="icone-secao">
+                    ➕
+                </div>
+
+                <div>
+                    <h3>Cadastrar novo livro</h3>
+
+                    <p>
+                        Preencha as informações abaixo para adicionar
+                        um livro à sua biblioteca.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <form id="formLivro">
+
+                <div class="campos">
+
+                    <div class="campo">
+                        <label for="titulo">Título do livro</label>
+
+                        <input
+                            type="text"
+                            id="titulo"
+                            placeholder="Ex: O Pequeno Príncipe"
+                            required
+                        >
+                    </div>
+
+
+                    <div class="campo">
+                        <label for="autor">Autor</label>
+
+                        <input
+                            type="text"
+                            id="autor"
+                            placeholder="Ex: Antoine de Saint-Exupéry"
+                            required
+                        >
+                    </div>
+
+
+                    <div class="campo ano">
+                        <label for="ano">Ano</label>
+
+                        <input
+                            type="number"
+                            id="ano"
+                            placeholder="Ex: 1943"
+                            required
+                        >
+                    </div>
+
+                </div>
+
+
+                <button type="submit">
+                    📚 Cadastrar livro
+                </button>
+
+            </form>
+
+        </section>
+
+
+        <section class="livros">
+
+            <div class="titulo-lista">
+
+                <div>
+                    <h3>📖 Meus livros</h3>
+
+                    <p>
+                        Livros cadastrados na sua biblioteca
+                    </p>
+                </div>
+
+            </div>
+
+
+            <ul id="listaLivros"></ul>
+
+        </section>
+
+    </main>
+
+
+    <footer>
+        Biblioteca Fácil • Projeto ADS
+    </footer>
+
+
+    <script>
+
+        const formulario =
+            document.getElementById("formLivro");
+
+
+        formulario.addEventListener(
+            "submit",
+            async function(event) {
+
+                event.preventDefault();
+
+
+                const titulo =
+                    document.getElementById("titulo").value;
+
+                const autor =
+                    document.getElementById("autor").value;
+
+                const ano =
+                    document.getElementById("ano").value;
+
+
+                const resposta = await fetch(
+                    "/livros",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            titulo: titulo,
+                            autor: autor,
+                            ano: ano
+                        })
+                    }
+                );
+
+
+                const livro =
+                    await resposta.json();
+
+
+                if (resposta.ok) {
+
+                    alert(
+                        "Livro cadastrado com sucesso! 📚"
+                    );
+
+                    formulario.reset();
+
+                    carregarLivros();
+
+                } else {
+
+                    alert(livro.erro);
+
+                }
+
+            }
+        );
+
+
+        async function carregarLivros() {
+
+            const resposta =
+                await fetch("/livros");
+
+            const livros =
+                await resposta.json();
+
+
+            const lista =
+                document.getElementById(
+                    "listaLivros"
+                );
+
+
+            lista.innerHTML = "";
+
+
+            document.getElementById(
+                "totalLivros"
+            ).textContent = livros.length;
+
+
+            if (livros.length === 0) {
+
+                lista.innerHTML = `
+                    <div class="vazio">
+                        📚
+                        <h4>Nenhum livro cadastrado</h4>
+                        <p>
+                            Cadastre seu primeiro livro acima.
+                        </p>
+                    </div>
+                `;
+
+                return;
+            }
+
+
+            livros.forEach(function(livro) {
+
+                const item =
+                    document.createElement("li");
+
+
+                item.innerHTML = `
+
+                    <div class="capa">
+                        📖
+                    </div>
+
+                    <div class="informacoes">
+
+                        <h4>
+                            ${livro.titulo}
+                        </h4>
+
+                        <p>
+                            ${livro.autor}
+                        </p>
+
+                        <span>
+                            📅 ${livro.ano}
+                        </span>
+
+                    </div>
+
+                `;
+
+
+                lista.appendChild(item);
+
+            });
+
+        }
+
+
+        carregarLivros();
+
+    </script>
+
+</body>
+
+</html>

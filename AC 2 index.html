@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca Fácil</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+    <header class="cabecalho">
+        <div class="marca">
+            <div class="icone-livro">📚</div>
+            <div>
+                <h1>Biblioteca Fácil</h1>
+                <p>Seu espaço para organizar leituras</p>
+            </div>
+        </div>
+
+        <div class="contador">
+            <span>📖</span>
+            <div>
+                <small>TOTAL DE LIVROS</small>
+                <strong id="contador">0</strong>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="apresentacao">
+            <div>
+                <span class="etiqueta">SUA BIBLIOTECA DIGITAL</span>
+                <h2>Seus livros,<br>
+                    <span>suas histórias.</span>
+                </h2>
+                <p>
+                    Organize seus livros de forma simples.
+                    Cadastre suas leituras e mantenha todos os
+                    seus livros em um só lugar.
+                </p>
+            </div>
+
+            <div class="ilustracao">📚</div>
+        </section>
+
+        <section class="cadastro">
+            <div class="titulo-secao">
+                <div class="icone-secao">✏️</div>
+                <div>
+                    <h3 id="tituloFormulario">Cadastrar livro</h3>
+                    <p>Preencha os dados do livro abaixo.</p>
+                </div>
+            </div>
+
+            <form id="formLivro">
+                <div class="campos">
+                    <div class="campo">
+                        <label for="titulo">Título do livro</label>
+                        <input
+                            id="titulo"
+                            type="text"
+                            placeholder="Digite o título do livro"
+                            maxlength="150"
+                            required
+                        >
+                    </div>
+
+                    <div class="campo">
+                        <label for="autor">Autor</label>
+                        <input
+                            id="autor"
+                            type="text"
+                            placeholder="Digite o nome do autor"
+                            maxlength="150"
+                            required
+                        >
+                    </div>
+
+                    <div class="campo">
+                        <label for="ano">Ano de publicação</label>
+                        <input
+                            id="ano"
+                            type="number"
+                            placeholder="Ex.: 1899"
+                        >
+                    </div>
+                </div>
+
+                <div class="botoes-formulario">
+                    <button type="submit" id="botaoSalvar">
+                        Cadastrar livro
+                    </button>
+
+                    <button
+                        type="button"
+                        id="botaoCancelar"
+                        class="botao-cancelar"
+                        hidden
+                    >
+                        Cancelar edição
+                    </button>
+                </div>
+            </form>
+
+            <p id="mensagem" class="mensagem" role="status"></p>
+        </section>
+
+        <section class="livros">
+            <div class="titulo-lista">
+                <div class="icone-secao">📚</div>
+                <div>
+                    <h3>Livros cadastrados</h3>
+                    <p>Veja e gerencie os livros da sua biblioteca.</p>
+                </div>
+            </div>
+
+            <div id="listaLivros">
+                <div class="vazio">
+                    <div>📖</div>
+                    <h4>Carregando livros...</h4>
+                    <p>Aguarde um instante.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        Biblioteca Fácil · Organize seus livros de forma simples.
+    </footer>
+
+    <script>
+        const formulario = document.getElementById("formLivro");
+        const campoTitulo = document.getElementById("titulo");
+        const campoAutor = document.getElementById("autor");
+        const campoAno = document.getElementById("ano");
+        const lista = document.getElementById("listaLivros");
+        const mensagem = document.getElementById("mensagem");
+        const contador = document.getElementById("contador");
+        const botaoSalvar = document.getElementById("botaoSalvar");
+        const botaoCancelar = document.getElementById("botaoCancelar");
+        const tituloFormulario = document.getElementById("tituloFormulario");
+
+        let idEditando = null;
+
+        async function carregarLivros() {
+            try {
+                const resposta = await fetch("/livros");
+
+                if (!resposta.ok) {
+                    throw new Error("Não foi possível carregar os livros.");
+                }
+
+                const livros = await resposta.json();
+
+                lista.replaceChildren();
+                contador.textContent = livros.length;
+
+                if (livros.length === 0) {
+                    const vazio = document.createElement("div");
+                    vazio.className = "vazio";
+
+                    const icone = document.createElement("div");
+                    icone.textContent = "📚";
+
+                    const titulo = document.createElement("h4");
+                    titulo.textContent = "Sua biblioteca está vazia";
+
+                    const texto = document.createElement("p");
+                    texto.textContent = "Cadastre seu primeiro livro acima.";
+
+                    vazio.append(icone, titulo, texto);
+                    lista.appendChild(vazio);
+                    return;
+                }
+
+                livros.forEach(function(livro) {
+                    const cartao = document.createElement("article");
+                    cartao.className = "livro-item";
+
+                    const capa = document.createElement("div");
+                    capa.className = "capa";
+                    capa.textContent = "📖";
+
+                    const informacoes = document.createElement("div");
+                    informacoes.className = "informacoes";
+
+                    const titulo = document.createElement("h4");
+                    titulo.textContent = livro.titulo;
+
+                    const autor = document.createElement("p");
+                    autor.textContent = "Autor: " + livro.autor;
+
+                    const ano = document.createElement("span");
+                    ano.className = "ano-livro";
+                    ano.textContent = livro.ano
+                        ? "Publicado em " + livro.ano
+                        : "Ano não informado";
+
+                    const acoes = document.createElement("div");
+                    acoes.className = "acoes-livro";
+
+                    const editar = document.createElement("button");
+                    editar.type = "button";
+                    editar.className = "btn-editar";
+                    editar.textContent = "Editar";
+
+                    editar.addEventListener("click", function() {
+                        iniciarEdicao(livro);
+                    });
+
+                    const excluir = document.createElement("button");
+                    excluir.type = "button";
+                    excluir.className = "btn-excluir";
+                    excluir.textContent = "Excluir";
+
+                    excluir.addEventListener("click", function() {
+                        excluirLivro(livro.id);
+                    });
+
+                    acoes.append(editar, excluir);
+                    informacoes.append(titulo, autor, ano, acoes);
+                    cartao.append(capa, informacoes);
+                    lista.appendChild(cartao);
+                });
+
+            } catch (erro) {
+                lista.replaceChildren();
+
+                const aviso = document.createElement("div");
+                aviso.className = "vazio";
+
+                const titulo = document.createElement("h4");
+                titulo.textContent = "Não foi possível carregar os livros";
+
+                const texto = document.createElement("p");
+                texto.textContent = "Confira se o Flask e o MySQL estão funcionando.";
+
+                aviso.append(titulo, texto);
+                lista.appendChild(aviso);
+
+                mostrarMensagem(erro.message, true);
+            }
+        }
+
+        formulario.addEventListener("submit", async function(evento) {
+            evento.preventDefault();
+
+            const dados = {
+                titulo: campoTitulo.value.trim(),
+                autor: campoAutor.value.trim(),
+                ano: campoAno.value.trim() === ""
+                    ? null
+                    : Number(campoAno.value)
+            };
+
+            const editando = idEditando !== null;
+
+            const url = editando
+                ? "/livros/" + idEditando
+                : "/livros";
+
+            try {
+                const resposta = await fetch(url, {
+                    method: editando ? "PUT" : "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(dados)
+                });
+
+                const resultado = await resposta.json();
+
+                if (!resposta.ok) {
+                    throw new Error(
+                        resultado.erro || "Não foi possível salvar o livro."
+                    );
+                }
+
+                mostrarMensagem(
+                    editando
+                        ? "Livro atualizado com sucesso!"
+                        : "Livro cadastrado com sucesso!"
+                );
+
+                limparFormulario();
+                await carregarLivros();
+
+            } catch (erro) {
+                mostrarMensagem(erro.message, true);
+            }
+        });
+
+        function iniciarEdicao(livro) {
+            idEditando = livro.id;
+
+            campoTitulo.value = livro.titulo;
+            campoAutor.value = livro.autor;
+            campoAno.value = livro.ano ?? "";
+
+            tituloFormulario.textContent = "Editar livro";
+            botaoSalvar.textContent = "Salvar alterações";
+            botaoCancelar.hidden = false;
+
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth"
+            });
+
+            campoTitulo.focus();
+        }
+
+        function limparFormulario() {
+            formulario.reset();
+            idEditando = null;
+
+            tituloFormulario.textContent = "Cadastrar livro";
+            botaoSalvar.textContent = "Cadastrar livro";
+            botaoCancelar.hidden = true;
+        }
+
+        botaoCancelar.addEventListener("click", function() {
+            limparFormulario();
+            mensagem.textContent = "";
+        });
+
+        async function excluirLivro(id) {
+            const confirmar = window.confirm(
+                "Tem certeza que deseja excluir este livro?"
+            );
+
+            if (!confirmar) {
+                return;
+            }
+
+            try {
+                const resposta = await fetch("/livros/" + id, {
+                    method: "DELETE"
+                });
+
+                const resultado = await resposta.json();
+
+                if (!resposta.ok) {
+                    throw new Error(
+                        resultado.erro || "Não foi possível excluir o livro."
+                    );
+                }
+
+                if (idEditando === id) {
+                    limparFormulario();
+                }
+
+                mostrarMensagem("Livro excluído com sucesso!");
+                await carregarLivros();
+
+            } catch (erro) {
+                mostrarMensagem(erro.message, true);
+            }
+        }
+
+        function mostrarMensagem(texto, erro = false) {
+            mensagem.textContent = texto;
+            mensagem.classList.toggle("mensagem-erro", erro);
+        }
+
+        carregarLivros();
+    </script>
+
+</body>
+</html>

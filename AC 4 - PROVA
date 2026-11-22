@@ -1,0 +1,503 @@
+from flask import Flask, request, jsonify, send_from_directory
+import mysql.connector
+from mysql.connector import Error
+from datetime import date
+import os
+
+app = Flask(__name__)
+
+# CAMINHO DA PASTA FRONTEND
+PASTA_FRONTEND = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "frontend")
+)
+
+
+# CONEXÃO COM O MYSQL
+def conectar():
+    return mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="1234",
+        database="biblioteca",
+        port=3306
+    )
+
+
+# CRIAR AS TABELAS
+def criar_tabela():
+    conexao = conectar()
+    cursor = conexao.cursor()
+
+    try:
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS livros (
+                Id INT AUTO_INCREMENT PRIMARY KEY,
+                Titulo VARCHAR(150) NOT NULL,
+                Autor VARCHAR(150) NOT NULL,
+                Ano INT NULL
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS emprestimos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                livro_id INT NOT NULL,
+                nome_leitor VARCHAR(150) NOT NULL,
+                data_emprestimo DATE NOT NULL,
+                data_prevista DATE NOT NULL,
+                data_devolucao DATE NULL,
+                FOREIGN KEY (livro_id)
+                    REFERENCES livros(Id)
+                    ON DELETE RESTRICT
+            )
+        """)
+
+        conexao.commit()
+
+    finally:
+        cursor.close()
+        conexao.close()
+
+
+# ABRIR A PÁGINA PRINCIPAL
+@app.route("/")
+def inicio():
+    return send_from_directory(PASTA_FRONTEND, "index.html")
+
+
+# ABRIR O CSS
+@app.route("/style.css")
+def estilo():
+    return send_from_directory(PASTA_FRONTEND, "style.css")
+
+
+# FUNÇÃO PARA LISTAR LIVROS COM DISPONIBILIDADE
+def consultar_livros(termo=None):
+    conexao = conectar()
+    cursor = conexao.cursor(dictionary=True)
+
+    try:
+        sql = """
+            SELECT
+                l.Id AS id,
+                l.Titulo AS titulo,
+                l.Autor AS autor,
+                l.Ano AS ano,
+                CASE
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM emprestimos e
+                        WHERE e.livro_id = l.Id
+                        AND e.data_devolucao IS NULL
+                    )
+                    THEN 'Emprestado'
+                    ELSE 'Disponível'
+                END AS disponibilidade
+            FROM livros l
+        """
+
+        parametros = ()
+
+        if termo:
+            sql += """
+                WHERE l.Titulo LIKE %s
+                   OR l.Autor LIKE %s
+            """
+            parametros = (f"%{termo}%", f"%{termo}%")
+
+        sql += " ORDER BY l.Id DESC"
+
+        cursor.execute(sql, parametros)
+        return cursor.fetchall()
+
+    finally:
+        cursor.close()
+        conexao.close()
+
+
+# LISTAR TODOS OS LIVROS
+@app.route("/livros", methods=["GET"])
+def listar_livros():
+    try:
+        livros = consultar_livros()
+        return jsonify(livros)
+
+    except Error as erro:
+        return jsonify({"erro": str(erro)}), 500
+
+
+# PESQUISAR LIVROS POR TÍTULO OU AUTOR
+@app.route("/pesquisar", methods=["GET"])
+def pesquisar_livros():
+    termo = request.args.get("q", "").strip()
+
+    try:
+        livros = consultar_livros(termo)
+        return jsonify(livros)
+
+    except Error as erro:
+        return jsonify({"erro": str(erro)}), 500
+
+
+# CADASTRAR LIVRO
+@app.route("/livros", methods=["POST"])
+def cadastrar_livro():
+    dados = request.get_json(silent=True) or {}
+
+    titulo = dados.get("titulo")
+    autor = dados.get("autor")
+    ano = dados.get("ano")
+
+    if not isinstance(titulo, str) or not titulo.strip():
+        return jsonify({"erro": "Informe o título do livro."}), 400
+
+    if not isinstance(autor, str) or not autor.strip():
+        return jsonify({"erro": "Informe o autor do livro."}), 400
+
+    try:
+        if ano in ("", None):
+            ano = None
+        else:
+            ano = int(ano)
+
+        conexao = conectar()
+        cursor = conexao.cursor()
+
+        try:
+            cursor.execute("""
+                INSERT INTO livros (Titulo, Autor, Ano)
+                VALUES (%s, %s, %s)
+            """, (titulo.strip(), autor.strip(), ano))
+
+            conexao.commit()
+
+        finally:
+            cursor.close()
+            conexao.close()
+
+        return jsonify({
+            "mensagem": "Livro cadastrado com sucesso!"
+        }), 201
+
+    except (ValueError, TypeError):
+        return jsonify({"erro": "Informe um ano válido."}), 400
+
+    except Error as erro:
+        return jsonify({"erro": str(erro)}), 500
+
+
+# EDITAR LIVRO
+@app.route("/livros/<int:livro_id>", methods=["PUT"])
+def editar_livro(livro_id):
+    dados = request.get_json(silent=True) or {}
+
+    titulo = dados.get("titulo")
+    autor = dados.get("autor")
+    ano = dados.get("ano")
+
+    if not isinstance(titulo, str) or not titulo.strip():
+        return jsonify({"erro": "Informe o título do livro."}), 400
+
+    if not isinstance(autor, str) or not autor.strip():
+        return jsonify({"erro": "Informe o autor do livro."}), 400
+
+    try:
+        if ano in ("", None):
+            ano = None
+        else:
+            ano = int(ano)
+
+        conexao = conectar()
+        cursor = conexao.cursor()
+
+        try:
+            cursor.execute("""
+                UPDATE livros
+                SET Titulo = %s,
+                    Autor = %s,
+                    Ano = %s
+                WHERE Id = %s
+            """, (titulo.strip(), autor.strip(), ano, livro_id))
+
+            conexao.commit()
+
+            if cursor.rowcount == 0:
+                return jsonify({"erro": "Livro não encontrado."}), 404
+
+        finally:
+            cursor.close()
+            conexao.close()
+
+        return jsonify({
+            "mensagem": "Livro atualizado com sucesso!"
+        })
+
+    except (ValueError, TypeError):
+        return jsonify({"erro": "Informe um ano válido."}), 400
+
+    except Error as erro:
+        return jsonify({"erro": str(erro)}), 500
+
+
+# EXCLUIR LIVRO
+@app.route("/livros/<int:livro_id>", methods=["DELETE"])
+def excluir_livro(livro_id):
+    conexao = None
+    cursor = None
+
+    try:
+        conexao = conectar()
+        cursor = conexao.cursor()
+
+        cursor.execute("""
+            SELECT COUNT(*)
+            FROM emprestimos
+            WHERE livro_id = %s
+            AND data_devolucao IS NULL
+        """, (livro_id,))
+
+        emprestimos_ativos = cursor.fetchone()[0]
+
+        if emprestimos_ativos > 0:
+            return jsonify({
+                "erro": "Não é possível excluir um livro que está emprestado."
+            }), 409
+
+        cursor.execute("""
+            DELETE FROM livros
+            WHERE Id = %s
+        """, (livro_id,))
+
+        if cursor.rowcount == 0:
+            return jsonify({"erro": "Livro não encontrado."}), 404
+
+        conexao.commit()
+
+        return jsonify({
+            "mensagem": "Livro excluído com sucesso!"
+        })
+
+    except Error as erro:
+        if conexao:
+            conexao.rollback()
+
+        return jsonify({
+            "erro": "Não foi possível excluir o livro. Verifique se existe histórico de empréstimos."
+        }), 409
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conexao and conexao.is_connected():
+            conexao.close()
+
+
+# REGISTRAR EMPRÉSTIMO
+@app.route("/emprestimos", methods=["POST"])
+def cadastrar_emprestimo():
+    dados = request.get_json(silent=True) or {}
+
+    livro_id = dados.get("livro_id")
+    nome_leitor = dados.get("nome_leitor")
+    data_emprestimo = dados.get("data_emprestimo")
+    data_prevista = dados.get("data_prevista")
+
+    if not livro_id or not nome_leitor or not str(nome_leitor).strip():
+        return jsonify({
+            "erro": "Informe o livro e o nome do leitor."
+        }), 400
+
+    try:
+        livro_id = int(livro_id)
+
+        data_emprestimo = date.fromisoformat(
+            data_emprestimo
+        ) if data_emprestimo else date.today()
+
+        if not data_prevista:
+            return jsonify({
+                "erro": "Informe a data prevista para devolução."
+            }), 400
+
+        data_prevista = date.fromisoformat(data_prevista)
+
+        if data_prevista < data_emprestimo:
+            return jsonify({
+                "erro": "A data prevista não pode ser anterior à data do empréstimo."
+            }), 400
+
+        conexao = conectar()
+        cursor = conexao.cursor()
+
+        try:
+            cursor.execute("""
+                SELECT Id
+                FROM livros
+                WHERE Id = %s
+                FOR UPDATE
+            """, (livro_id,))
+
+            livro = cursor.fetchone()
+
+            if not livro:
+                return jsonify({
+                    "erro": "Livro não encontrado."
+                }), 404
+
+            cursor.execute("""
+                SELECT id
+                FROM emprestimos
+                WHERE livro_id = %s
+                AND data_devolucao IS NULL
+            """, (livro_id,))
+
+            if cursor.fetchone():
+                return jsonify({
+                    "erro": "Este livro já está emprestado."
+                }), 409
+
+            cursor.execute("""
+                INSERT INTO emprestimos (
+                    livro_id,
+                    nome_leitor,
+                    data_emprestimo,
+                    data_prevista
+                )
+                VALUES (%s, %s, %s, %s)
+            """, (
+                livro_id,
+                str(nome_leitor).strip(),
+                data_emprestimo,
+                data_prevista
+            ))
+
+            conexao.commit()
+
+        finally:
+            cursor.close()
+            conexao.close()
+
+        return jsonify({
+            "mensagem": "Empréstimo registrado com sucesso!"
+        }), 201
+
+    except (ValueError, TypeError):
+        return jsonify({
+            "erro": "Verifique o código do livro e as datas informadas."
+        }), 400
+
+    except Error as erro:
+        return jsonify({"erro": str(erro)}), 500
+
+
+# LISTAR HISTÓRICO DE EMPRÉSTIMOS
+@app.route("/emprestimos", methods=["GET"])
+def listar_emprestimos():
+    conexao = None
+    cursor = None
+
+    try:
+        conexao = conectar()
+        cursor = conexao.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                e.id,
+                e.livro_id,
+                l.Titulo AS titulo,
+                e.nome_leitor,
+                e.data_emprestimo,
+                e.data_prevista,
+                e.data_devolucao,
+                CASE
+                    WHEN e.data_devolucao IS NULL
+                    THEN 'Emprestado'
+                    ELSE 'Devolvido'
+                END AS status
+            FROM emprestimos e
+            INNER JOIN livros l ON l.Id = e.livro_id
+            ORDER BY e.id DESC
+        """)
+
+        emprestimos = cursor.fetchall()
+
+        for item in emprestimos:
+            for campo in (
+                "data_emprestimo",
+                "data_prevista",
+                "data_devolucao"
+            ):
+                if item[campo]:
+                    item[campo] = item[campo].isoformat()
+
+        return jsonify(emprestimos)
+
+    except Error as erro:
+        return jsonify({"erro": str(erro)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conexao and conexao.is_connected():
+            conexao.close()
+
+
+# REGISTRAR DEVOLUÇÃO
+@app.route("/emprestimos/<int:emprestimo_id>/devolver", methods=["PUT"])
+def devolver_livro(emprestimo_id):
+    conexao = None
+    cursor = None
+
+    try:
+        conexao = conectar()
+        cursor = conexao.cursor()
+
+        cursor.execute("""
+            UPDATE emprestimos
+            SET data_devolucao = CURDATE()
+            WHERE id = %s
+            AND data_devolucao IS NULL
+        """, (emprestimo_id,))
+
+        if cursor.rowcount == 0:
+            conexao.rollback()
+            return jsonify({
+                "erro": "Empréstimo não encontrado ou livro já devolvido."
+            }), 404
+
+        conexao.commit()
+
+        return jsonify({
+            "mensagem": "Devolução registrada com sucesso!"
+        })
+
+    except Error as erro:
+        if conexao:
+            conexao.rollback()
+
+        return jsonify({"erro": str(erro)}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conexao and conexao.is_connected():
+            conexao.close()
+
+
+# INICIAR O SISTEMA
+if __name__ == "__main__":
+    try:
+        criar_tabela()
+
+        print("Banco de dados conectado!")
+        print("Biblioteca Fácil está funcionando!")
+
+        app.run(
+            host="127.0.0.1",
+            port=5000,
+            debug=True
+        )
+
+    except Error as erro:
+        print("Erro ao conectar com o MySQL:")
+        print(erro)

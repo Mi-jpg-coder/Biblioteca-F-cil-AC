@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biblioteca Fácil</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f0ff;
+            color: #333;
+        }
+
+        .cabecalho {
+            background: #6d45a5;
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+        }
+
+        .marca {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .subtitulo {
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+        }
+
+        .painel {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+        }
+
+        h2 {
+            color: #6d45a5;
+            margin-bottom: 20px;
+            font-size: 21px;
+        }
+
+        .campo {
+            margin-bottom: 15px;
+        }
+
+        .campo label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+            color: #444;
+        }
+
+        .campo input,
+        .campo select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d8cce8;
+            border-radius: 7px;
+            font-size: 15px;
+            background: white;
+        }
+
+        .campo input:focus,
+        .campo select:focus {
+            outline: none;
+            border-color: #6d45a5;
+        }
+
+        .botoes {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            border-radius: 7px;
+            padding: 11px 18px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.88;
+        }
+
+        .botao-salvar {
+            background: #6d45a5;
+            color: white;
+        }
+
+        .botao-cancelar {
+            background: #e5def0;
+            color: #503477;
+        }
+
+        .botao-editar {
+            background: #8b6aba;
+            color: white;
+        }
+
+        .botao-excluir {
+            background: #d9536b;
+            color: white;
+        }
+
+        .botao-devolver {
+            background: #4d9b70;
+            color: white;
+        }
+
+        .mensagem {
+            display: none;
+            padding: 12px;
+            border-radius: 7px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .mensagem.sucesso {
+            display: block;
+            background: #e1f5e8;
+            color: #23643a;
+        }
+
+        .mensagem.erro {
+            display: block;
+            background: #ffe4e8;
+            color: #9b253b;
+        }
+
+        .cabecalho-lista {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        .cabecalho-lista h2 {
+            margin-bottom: 0;
+        }
+
+        .contador {
+            background: #eee5fa;
+            color: #6d45a5;
+            padding: 8px 13px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .pesquisa {
+            margin-bottom: 20px;
+        }
+
+        .pesquisa input {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #d8cce8;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        .livro-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            padding: 17px 0;
+            border-bottom: 1px solid #eee7f5;
+        }
+
+        .livro-item:last-child {
+            border-bottom: none;
+        }
+
+        .capa {
+            width: 48px;
+            height: 60px;
+            background: #eee5fa;
+            color: #6d45a5;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .informacoes {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .informacoes h3 {
+            color: #503477;
+            font-size: 16px;
+            margin-bottom: 5px;
+            overflow-wrap: anywhere;
+        }
+
+        .informacoes p {
+            color: #777;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .ano-livro {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .acoes {
+            display: flex;
+            gap: 7px;
+            flex-wrap: wrap;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .disponivel {
+            background: #e1f5e8;
+            color: #23643a;
+        }
+
+        .emprestado {
+            background: #fff0d9;
+            color: #946018;
+        }
+
+        .vazio {
+            text-align: center;
+            padding: 30px 10px;
+            color: #888;
+        }
+
+        .emoji {
+            font-size: 35px;
+            margin-bottom: 10px;
+        }
+
+        .emprestimo-item {
+            border-bottom: 1px solid #eee7f5;
+            padding: 17px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .emprestimo-item:last-child {
+            border-bottom: none;
+        }
+
+        .dados-emprestimo {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .dados-emprestimo h3 {
+            color: #503477;
+            font-size: 16px;
+            margin-bottom: 7px;
+        }
+
+        .dados-emprestimo p {
+            color: #777;
+            font-size: 14px;
+            margin: 4px 0;
+            overflow-wrap: anywhere;
+        }
+
+        .rodape {
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+            padding: 20px;
+        }
+
+        @media (max-width: 650px) {
+            .container {
+                width: 94%;
+                margin: 18px auto;
+            }
+
+            .painel {
+                padding: 18px;
+            }
+
+            .livro-item,
+            .emprestimo-item {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .acoes {
+                width: 100%;
+                padding-left: 63px;
+            }
+
+            .acoes button {
+                flex: 1;
+            }
+
+            .botao-devolver {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="cabecalho">
+        <div class="marca">📚 Biblioteca Fácil</div>
+        <p class="subtitulo">Organize seus livros, empréstimos e devoluções</p>
+    </header>
+
+    <main class="container">
+
+        <!-- CADASTRO DE LIVROS -->
+        <section class="painel">
+            <h2 id="tituloFormulario">Cadastrar livro</h2>
+
+            <form id="formLivro">
+                <div class="campo">
+                    <label for="titulo">Título do livro</label>
+                    <input
+                        type="text"
+                        id="titulo"
+                        placeholder="Digite o título do livro"
+                        required
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="autor">Autor</label>
+                    <input
+                        type="text"
+                        id="autor"
+                        placeholder="Digite o nome do autor"
+                        required
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="ano">Ano de publicação</label>
+                    <input
+                        type="number"
+                        id="ano"
+                        placeholder="Ex.: 2024"
+                        min="1"
+                        required
+                    >
+                </div>
+
+                <div class="botoes">
+                    <button type="submit" class="botao-salvar" id="botaoSalvar">
+                        Salvar livro
+                    </button>
+
+                    <button
+                        type="button"
+                        class="botao-cancelar"
+                        id="botaoCancelar"
+                        hidden
+                    >
+                        Cancelar edição
+                    </button>
+                </div>
+            </form>
+
+            <div id="mensagemLivro" class="mensagem"></div>
+        </section>
+
+        <!-- LISTA DE LIVROS -->
+        <section class="painel">
+            <div class="cabecalho-lista">
+                <h2>Meus livros</h2>
+                <span class="contador" id="contadorLivros">0 livros</span>
+            </div>
+
+            <div class="pesquisa">
+                <input
+                    type="text"
+                    id="campoPesquisa"
+                    placeholder="🔎 Pesquisar por título ou autor..."
+                >
+            </div>
+
+            <div id="listaLivros">
+                <div class="vazio">Carregando livros...</div>
+            </div>
+        </section>
+
+        <!-- CADASTRO DE EMPRÉSTIMOS -->
+        <section class="painel">
+            <h2>Registrar empréstimo</h2>
+
+            <form id="formEmprestimo">
+
+                <div class="campo">
+                    <label for="livroEmprestimo">Selecionar livro disponível</label>
+                    <select id="livroEmprestimo" required>
+                        <option value="">Carregando livros...</option>
+                    </select>
+                </div>
+
+                <div class="campo">
+                    <label for="nomeLeitor">Nome do leitor</label>
+                    <input
+                        type="text"
+                        id="nomeLeitor"
+                        placeholder="Digite o nome de quem está levando o livro"
+                        required
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="dataEmprestimo">Data do empréstimo</label>
+                    <input type="date" id="dataEmprestimo" required>
+                </div>
+
+                <div class="campo">
+                    <label for="dataPrevista">Data prevista para devolução</label>
+                    <input type="date" id="dataPrevista" required>
+                </div>
+
+                <div class="botoes">
+                    <button type="submit" class="botao-salvar">
+                        Registrar empréstimo
+                    </button>
+                </div>
+            </form>
+
+            <div id="mensagemEmprestimo" class="mensagem"></div>
+        </section>
+
+        <!-- HISTÓRICO -->
+        <section class="painel">
+            <div class="cabecalho-lista">
+                <h2>Histórico de empréstimos</h2>
+                <span class="contador" id="contadorEmprestimos">
+                    0 registros
+                </span>
+            </div>
+
+            <div id="listaEmprestimos">
+                <div class="vazio">Carregando histórico...</div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="rodape">
+        Biblioteca Fácil — Organização e controle do acervo
+    </footer>
+
+    <script>
+        let livroEmEdicao = null;
+        let livros = [];
+
+        const formLivro = document.getElementById("formLivro");
+        const formEmprestimo = document.getElementById("formEmprestimo");
+
+        const tituloInput = document.getElementById("titulo");
+        const autorInput = document.getElementById("autor");
+        const anoInput = document.getElementById("ano");
+
+        const listaLivros = document.getElementById("listaLivros");
+        const listaEmprestimos = document.getElementById("listaEmprestimos");
+
+        const campoPesquisa = document.getElementById("campoPesquisa");
+        const livroEmprestimo = document.getElementById("livroEmprestimo");
+
+        const dataEmprestimo = document.getElementById("dataEmprestimo");
+        const dataPrevista = document.getElementById("dataPrevista");
+
+        // Retorna a data local no formato YYYY-MM-DD.
+        function dataLocalHoje() {
+            const hoje = new Date();
+            const ano = hoje.getFullYear();
+            const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+            const dia = String(hoje.getDate()).padStart(2, "0");
+
+            return `${ano}-${mes}-${dia}`;
+        }
+
+        // Exibe uma data no formato brasileiro.
+        function formatarData(data) {
+            if (!data) {
+                return "Não informada";
+            }
+
+            const partes = String(data).substring(0, 10).split("-");
+
+            if (partes.length !== 3) {
+                return data;
+            }
+
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        // Mostra mensagens para o usuário.
+        function mostrarMensagem(elementoId, texto, erro = false) {
+            const elemento = document.getElementById(elementoId);
+
+            elemento.textContent = texto;
+            elemento.className = erro
+                ? "mensagem erro"
+                : "mensagem sucesso";
+        }
+
+        function limparMensagem(elementoId) {
+            const elemento = document.getElementById(elementoId);
+            elemento.textContent = "";
+            elemento.className = "mensagem";
+        }
+
+        // Faz requisições para o backend.
+        async function requisicao(url, opcoes = {}) {
+            const resposta = await fetch(url, {
+                ...opcoes,
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(opcoes.headers || {})
+                }
+            });
+
+            const dados = await resposta.json().catch(() => ({}));
+
+            if (!resposta.ok) {
+                throw new Error(dados.erro || dados.mensagem || "Não foi possível realizar a operação.");
+            }
+
+            return dados;
+        }
+
+        // Carrega os livros e aplica a pesquisa, quando houver.
+        async function carregarLivros() {
+            try {
+                const pesquisa = campoPesquisa.value.trim();
+
+                let dados;
+
+                if (pesquisa) {
+                    dados = await requisicao(
+                        `/pesquisar?q=${encodeURIComponent(pesquisa)}`
+                    );
+                } else {
+                    dados = await requisicao("/livros");
+                }
+
+                livros = Array.isArray(dados) ? dados : [];
+
+                mostrarLivros(livros);
+
+                document.getElementById("contadorLivros").textContent =
+                    `${livros.length} ${livros.length === 1 ? "livro" : "livros"}`;
+
+                await carregarOpcoesLivros();
+
+            } catch (erro) {
+                listaLivros.textContent = "";
+                const mensagem = document.createElement("div");
+                mensagem.className = "vazio";
+                mensagem.textContent = erro.message;
+                listaLivros.appendChild(mensagem);
+            }
+        }
+
+        // Monta a lista visual de livros.
+        function mostrarLivros(lista) {
+            listaLivros.textContent = "";
+
+            if (lista.length === 0) {
+                const vazio = document.createElement("div");
+                vazio.className = "vazio";
+
+                const emoji = document.createElement("div");
+                emoji.className = "emoji";
+                emoji.textContent = "📚";
+
+                const texto = document.createElement("p");
+                texto.textContent = "Nenhum livro encontrado.";
+
+                vazio.append(emoji, texto);
+                listaLivros.appendChild(vazio);
+                return;
+            }
+
+            lista.forEach(livro => {
+                const item = document.createElement("div");
+                item.className = "livro-item";
+
+                const capa = document.createElement("div");
+                capa.className = "capa";
+                capa.textContent = "📖";
+
+                const informacoes = document.createElement("div");
+                informacoes.className = "informacoes";
+
+                const titulo = document.createElement("h3");
+                titulo.textContent = livro.titulo;
+
+                const autor = document.createElement("p");
+                autor.textContent = `Autor: ${livro.autor}`;
+
+                const ano = document.createElement("span");
+                ano.className = "ano-livro";
+                ano.textContent = `Ano: ${livro.ano}`;
+
+                const status = document.createElement("span");
+                const estaEmprestado =
+                    livro.disponibilidade === "Emprestado";
+
+                status.className = estaEmprestado
+                    ? "status emprestado"
+                    : "status disponivel";
+
+                status.textContent = estaEmprestado
+                    ? "Emprestado"
+                    : "Disponível";
+
+                informacoes.append(titulo, autor, ano);
+                informacoes.appendChild(document.createElement("br"));
+                informacoes.appendChild(status);
+
+                const acoes = document.createElement("div");
+                acoes.className = "acoes";
+
+                const botaoEditar = document.createElement("button");
+                botaoEditar.className = "botao-editar";
+                botaoEditar.textContent = "Editar";
+                botaoEditar.addEventListener("click", () => editarLivro(livro));
+
+                const botaoExcluir = document.createElement("button");
+                botaoExcluir.className = "botao-excluir";
+                botaoExcluir.textContent = "Excluir";
+                botaoExcluir.addEventListener("click", () => excluirLivro(livro.id));
+
+                acoes.append(botaoEditar, botaoExcluir);
+                item.append(capa, informacoes, acoes);
+
+                listaLivros.appendChild(item);
+            });
+        }
+
+        // Atualiza o seletor com todos os livros disponíveis.
+        async function carregarOpcoesLivros() {
+            try {
+                const dados = await requisicao("/livros");
+                const livrosDisponiveis = Array.isArray(dados)
+                    ? dados.filter(livro => livro.disponibilidade !== "Emprestado")
+                    : [];
+
+                livroEmprestimo.textContent = "";
+
+                const primeiraOpcao = document.createElement("option");
+                primeiraOpcao.value = "";
+                primeiraOpcao.textContent = livrosDisponiveis.length
+                    ? "Selecione um livro"
+                    : "Nenhum livro disponível";
+
+                livroEmprestimo.appendChild(primeiraOpcao);
+
+                livrosDisponiveis.forEach(livro => {
+                    const opcao = document.createElement("option");
+                    opcao.value = livro.id;
+                    opcao.textContent = `${livro.titulo} — ${livro.autor}`;
+                    livroEmprestimo.appendChild(opcao);
+                });
+
+                livroEmprestimo.disabled = livrosDisponiveis.length === 0;
+
+            } catch (erro) {
+                livroEmprestimo.textContent = "";
+
+                const opcao = document.createElement("option");
+                opcao.value = "";
+                opcao.textContent = "Erro ao carregar livros";
+
+                livroEmprestimo.appendChild(opcao);
+                livroEmprestimo.disabled = true;
+            }
+        }
+
+        // Cadastra ou atualiza um livro.
+        formLivro.addEventListener("submit", async function(evento) {
+            evento.preventDefault();
+            limparMensagem("mensagemLivro");
+
+            const livro = {
+                titulo: tituloInput.value.trim(),
+                autor: autorInput.value.trim(),
+                ano: Number(anoInput.value)
+            };
+
+            if (!livro.titulo || !livro.autor || !livro.ano) {
+                mostrarMensagem(
+                    "mensagemLivro",
+                    "Preencha todos os campos corretamente.",
+                    true
+                );
+                return;
+            }
+
+            try {
+                if (livroEmEdicao !== null) {
+                    await requisicao(`/livros/${livroEmEdicao}`, {
+                        method: "PUT",
+                        body: JSON.stringify(livro)
+                    });
+
+                    mostrarMensagem(
+                        "mensagemLivro",
+                        "Livro atualizado com sucesso!"
+                    );
+                } else {
+                    await requisicao("/livros", {
+                        method: "POST",
+                        body: JSON.stringify(livro)
+                    });
+
+                    mostrarMensagem(
+                        "mensagemLivro",
+                        "Livro cadastrado com sucesso!"
+                    );
+                }
+
+                limparFormularioLivro();
+                await carregarLivros();
+
+            } catch (erro) {
+                mostrarMensagem("mensagemLivro", erro.message, true);
+            }
+        });
+
+        // Prepara o formulário para editar um livro.
+        function editarLivro(livro) {
+            livroEmEdicao = livro.id;
+
+            tituloInput.value = livro.titulo;
+            autorInput.value = livro.autor;
+            anoInput.value = livro.ano;
+
+            document.getElementById("tituloFormulario").textContent =
+                "Editar livro";
+
+            document.getElementById("botaoSalvar").textContent =
+                "Atualizar livro";
+
+            document.getElementById("botaoCancelar").hidden = false;
+
+            document.getElementById("tituloFormulario").scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+        }
+
+        // Limpa o formulário e cancela uma edição.
+        function limparFormularioLivro() {
+            formLivro.reset();
+            livroEmEdicao = null;
+
+            document.getElementById("tituloFormulario").textContent =
+                "Cadastrar livro";
+
+            document.getElementById("botaoSalvar").textContent =
+                "Salvar livro";
+
+            document.getElementById("botaoCancelar").hidden = true;
+        }
+
+        document.getElementById("botaoCancelar").addEventListener(
+            "click",
+            limparFormularioLivro
+        );
+
+        // Exclui um livro.
+        async function excluirLivro(id) {
+            const confirmar = confirm(
+                "Tem certeza de que deseja excluir este livro?"
+            );
+
+            if (!confirmar) {
+                return;
+            }
+
+            try {
+                await requisicao(`/livros/${id}`, {
+                    method: "DELETE"
+                });
+
+                mostrarMensagem(
+                    "mensagemLivro",
+                    "Livro excluído com sucesso!"
+                );
+
+                await carregarLivros();
+
+            } catch (erro) {
+                mostrarMensagem("mensagemLivro", erro.message, true);
+            }
+        }
+
+        // Pesquisa livros enquanto o usuário digita.
+        let temporizadorPesquisa;
+
+        campoPesquisa.addEventListener("input", function() {
+            clearTimeout(temporizadorPesquisa);
+
+            temporizadorPesquisa = setTimeout(() => {
+                carregarLivros();
+            }, 300);
+        });
+
+        // Define a data inicial do empréstimo como hoje.
+        function definirDataHoje() {
+            const hoje = dataLocalHoje();
+
+            dataEmprestimo.value = hoje;
+            dataEmprestimo.max = hoje;
+
+            dataPrevista.min = hoje;
+            dataPrevista.value = hoje;
+        }
+
+        // Atualiza a data mínima da devolução prevista.
+        dataEmprestimo.addEventListener("change", function() {
+            dataPrevista.min = dataEmprestimo.value;
+
+            if (
+                dataPrevista.value &&
+                dataPrevista.value < dataEmprestimo.value
+            ) {
+                dataPrevista.value = dataEmprestimo.value;
+            }
+        });
+
+        // Registra um empréstimo.
+        formEmprestimo.addEventListener("submit", async function(evento) {
+            evento.preventDefault();
+            limparMensagem("mensagemEmprestimo");
+
+            const dados = {
+                livro_id: Number(livroEmprestimo.value),
+                nome_leitor: document.getElementById("nomeLeitor").value.trim(),
+                data_emprestimo: dataEmprestimo.value,
+                data_prevista: dataPrevista.value
+            };
+
+            if (
+                !dados.livro_id ||
+                !dados.nome_leitor ||
+                !dados.data_emprestimo ||
+                !dados.data_prevista
+            ) {
+                mostrarMensagem(
+                    "mensagemEmprestimo",
+                    "Preencha todos os campos do empréstimo.",
+                    true
+                );
+                return;
+            }
+
+            if (dados.data_prevista < dados.data_emprestimo) {
+                mostrarMensagem(
+                    "mensagemEmprestimo",
+                    "A data prevista não pode ser anterior à data do empréstimo.",
+                    true
+                );
+                return;
+            }
+
+            try {
+                await requisicao("/emprestimos", {
+                    method: "POST",
+                    body: JSON.stringify(dados)
+                });
+
+                mostrarMensagem(
+                    "mensagemEmprestimo",
+                    "Empréstimo registrado com sucesso!"
+                );
+
+                formEmprestimo.reset();
+                definirDataHoje();
+
+                await carregarLivros();
+                await carregarEmprestimos();
+
+            } catch (erro) {
+                mostrarMensagem(
+                    "mensagemEmprestimo",
+                    erro.message,
+                    true
+                );
+            }
+        });
+
+        // Carrega o histórico de empréstimos e devoluções.
+        async function carregarEmprestimos() {
+            try {
+                const dados = await requisicao("/emprestimos");
+                const emprestimos = Array.isArray(dados) ? dados : [];
+
+                listaEmprestimos.textContent = "";
+
+                document.getElementById("contadorEmprestimos").textContent =
+                    `${emprestimos.length} ${emprestimos.length === 1 ? "registro" : "registros"}`;
+
+                if (emprestimos.length === 0) {
+                    const vazio = document.createElement("div");
+                    vazio.className = "vazio";
+
+                    const emoji = document.createElement("div");
+                    emoji.className = "emoji";
+                    emoji.textContent = "📋";
+
+                    const texto = document.createElement("p");
+                    texto.textContent = "Ainda não existem empréstimos registrados.";
+
+                    vazio.append(emoji, texto);
+                    listaEmprestimos.appendChild(vazio);
+                    return;
+                }
+
+                emprestimos.forEach(emprestimo => {
+                    const item = document.createElement("div");
+                    item.className = "emprestimo-item";
+
+                    const dadosItem = document.createElement("div");
+                    dadosItem.className = "dados-emprestimo";
+
+                    const titulo = document.createElement("h3");
+                    titulo.textContent = emprestimo.titulo || "Livro";
+
+                    const leitor = document.createElement("p");
+                    leitor.textContent =
+                        `Leitor: ${emprestimo.nome_leitor}`;
+
+                    const dataInicio = document.createElement("p");
+                    dataInicio.textContent =
+                        `Empréstimo: ${formatarData(emprestimo.data_emprestimo)}`;
+
+                    const dataFim = document.createElement("p");
+                    dataFim.textContent =
+                        `Devolução prevista: ${formatarData(emprestimo.data_prevista)}`;
+
+                    const status = document.createElement("span");
+                    const devolvido = Boolean(emprestimo.data_devolucao);
+
+                    status.className = devolvido
+                        ? "status disponivel"
+                        : "status emprestado";
+
+                    status.textContent = devolvido
+                        ? "Devolvido"
+                        : "Emprestado";
+
+                    dadosItem.append(
+                        titulo,
+                        leitor,
+                        dataInicio,
+                        dataFim
+                    );
+
+                    if (devolvido) {
+                        const dataDevolucao = document.createElement("p");
+                        dataDevolucao.textContent =
+                            `Devolvido em: ${formatarData(emprestimo.data_devolucao)}`;
+
+                        dadosItem.appendChild(dataDevolucao);
+                    }
+
+                    dadosItem.appendChild(status);
+                    item.appendChild(dadosItem);
+
+                    // Só permite registrar devolução de empréstimos ativos.
+                    if (!devolvido) {
+                        const botaoDevolver = document.createElement("button");
+                        botaoDevolver.className = "botao-devolver";
+                        botaoDevolver.textContent = "Registrar devolução";
+
+                        botaoDevolver.addEventListener("click", () => {
+                            devolverLivro(emprestimo.id);
+                        });
+
+                        item.appendChild(botaoDevolver);
+                    }
+
+                    listaEmprestimos.appendChild(item);
+                });
+
+            } catch (erro) {
+                listaEmprestimos.textContent = "";
+
+                const mensagem = document.createElement("div");
+                mensagem.className = "vazio";
+                mensagem.textContent =
+                    `Não foi possível carregar o histórico: ${erro.message}`;
+
+                listaEmprestimos.appendChild(mensagem);
+            }
+        }
+
+        // Registra a devolução de um livro.
+        async function devolverLivro(id) {
+            const confirmar = confirm(
+                "Deseja registrar a devolução deste livro?"
+            );
+
+            if (!confirmar) {
+                return;
+            }
+
+            try {
+                await requisicao(`/emprestimos/${id}/devolver`, {
+                    method: "PUT"
+                });
+
+                mostrarMensagem(
+                    "mensagemEmprestimo",
+                    "Devolução registrada com sucesso!"
+                );
+
+                await carregarEmprestimos();
+                await carregarLivros();
+
+            } catch (erro) {
+                mostrarMensagem(
+                    "mensagemEmprestimo",
+                    erro.message,
+                    true
+                );
+            }
+        }
+
+        // Inicialização da página.
+        async function iniciarBiblioteca() {
+            definirDataHoje();
+
+            await carregarLivros();
+            await carregarEmprestimos();
+        }
+
+        iniciarBiblioteca();
+    </script>
+
+</body>
+</html>
